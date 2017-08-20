@@ -27,4 +27,6 @@ executable ezmips
                      , optparse-applicative
                      , microlens-platform
                      , array
+                     , recursion-schemes
+                     , free
 
