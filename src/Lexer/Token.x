@@ -2,7 +2,7 @@
 module Lexer.Token where
 }
 
-%wrapper "basic"
+%wrapper "posn"
 
 $digit = 0-9
 $alpha = [a-zA-Z]
@@ -11,17 +11,17 @@ tokens :-
 
   $white+                       ;
   "--".*                        ;
-  let                           { \s -> TokenLet }
-  in                            { \s -> TokenIn }
-  $digit+                       { \s -> TokenInt (read s) }
-  \=                            { \s -> TokenEq }
-  \+                            { \s -> TokenPlus }
-  \-                            { \s -> TokenMinus }
-  \*                            { \s -> TokenTimes }
-  \/                            { \s -> TokenDiv }
-  \(                            { \s -> TokenLParen }
-  \)                            { \s -> TokenRParen }
-  $alpha [$alpha $digit \_ \']* { \s -> TokenSym s }
+  let                           { \_ s -> TokenLet }
+  in                            { \_ s -> TokenIn }
+  $digit+                       { \_ s -> TokenInt (read s) }
+  \=                            { \_ s -> TokenEq }
+  \+                            { \_ s -> TokenPlus }
+  \-                            { \_ s -> TokenMinus }
+  \*                            { \_ s -> TokenTimes }
+  \/                            { \_ s -> TokenDiv }
+  \(                            { \_ s -> TokenLParen }
+  \)                            { \_ s -> TokenRParen }
+  $alpha [$alpha $digit \_ \']* { \_ s -> TokenSym s }
 {
 -- The token type:
 data Token = TokenLet
@@ -36,5 +36,5 @@ data Token = TokenLet
            | TokenLParen
            | TokenRParen
            deriving (Eq,Show)
-scanTokens = alexScanTokens
+
 }

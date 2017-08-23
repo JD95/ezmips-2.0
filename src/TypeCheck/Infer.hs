@@ -39,4 +39,4 @@ binaryCheck a b c l r = a ==. l *> b ==. r *> pure c
   | otherwise = Left $ WrongType t c
 (==.) t r = r  
 
-test = Plus_ (Int_ 5) (Int_ 5)
+test = plus (int 5) (int 6)
