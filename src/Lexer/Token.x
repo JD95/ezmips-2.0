@@ -25,6 +25,7 @@ tokens :-
   \(                            { ignoreInput TokenLParen }
   \)                            { ignoreInput TokenRParen }
   $alpha [$alpha $digit \_ \']* { usingInput' TokenSym }
+  \;	 	 	   	{ ignoreInput TokenSemiColon }
 {
 
 usingInput f (p,_,s,_) l = do
@@ -57,6 +58,7 @@ data Token = TokenLet
            | TokenDiv
            | TokenLParen
            | TokenRParen
+	   | TokenSemiColon
            deriving (Eq,Show)
 
 }

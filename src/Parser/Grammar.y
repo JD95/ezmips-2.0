@@ -20,11 +20,12 @@ int { L _ (TokenInt $$) }
 var { L _ (TokenSym $$) }
 '=' { L _ TokenEq }
 '+' { L _ TokenPlus }
-    '-' { L _ TokenMinus }
-    '*' { L _ TokenTimes }
-    '/' { L _ TokenDiv }
-    '(' { L _ TokenLParen }
-    ')' { L _ TokenRParen }
+'-' { L _ TokenMinus }
+'*' { L _ TokenTimes }
+'/' { L _ TokenDiv }
+'(' { L _ TokenLParen }
+')' { L _ TokenRParen }
+';' { L _ TokenSemiColon }
 
 %right in
 %nonassoc '>' '<'
@@ -38,6 +39,8 @@ Exp : Exp '+' Exp            { Fix (Plus $1 $3) }
     | Exp '-' Exp            { Fix (Minus $1 $3) }
     | Exp '*' Exp            { Fix (Times $1 $3) }
     | Exp '/' Exp            { Fix (Div $1 $3) }
+    | Exp ';'                { Fix (Stmt $1 Nothing) }
+    | Exp ';' Exp            { Fix (Stmt $1 (Just $3)) }
     | '(' Exp ')'            { $2 }
     | '-' Exp %prec NEG      { Fix (Negate $2) }
     | int                    { Fix (Int $1) }

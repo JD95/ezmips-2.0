@@ -11,7 +11,8 @@ import qualified Prelude
 import           Protolude
 
 data Exp_ a
-  = Plus a a
+  = Stmt a (Maybe a)
+  | Plus a a
   | Minus a a
   | Times a a
   | Div a a
@@ -25,13 +26,15 @@ newtype PrintExp = PrintExp Exp
 
 showExp :: Exp -> Text
 showExp = cata f
-  where f :: Exp_ Text -> Text
+  where f :: Exp_ Text -> Text        
         f (Int i)     = show i
         f (Plus l r)  = l <> " + " <> r
         f (Minus l r) = l <> " - " <> r
         f (Times l r) = l <> " * " <> r
         f (Div l r)   = l <> " / " <> r
         f (Negate e)  = "-" <> e
+        f (Stmt e Nothing) = e <> ";"
+        f (Stmt e (Just n)) = e <> ";\n" <> n
 
 instance Prelude.Show PrintExp where
   show (PrintExp e) = toS $ showExp e
@@ -73,4 +76,4 @@ freeToFix = cata f
   where f :: F.FreeF f Void (Fix f) -> Fix f
         f (F.Free r) = Fix r
 
-test = plus (int 1) (int 2)
+
