@@ -9,7 +9,7 @@ import Parser.AST
   
 }
 
-%name parseCalc
+%name parseGrammar
 %lexer {lexwrap} {EOF}
 %monad {Alex}
 %error { parseError }
