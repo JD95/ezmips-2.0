@@ -16,11 +16,25 @@ extra-source-files:  README.md
                    , src/Parser/Grammar.y
 
 executable ezmips
-  hs-source-dirs:      src
+  hs-source-dirs:      app
   main-is:             Main.hs
   default-language:    Haskell2010
-  other-modules:       Lexer.Token
+  build-depends:       base >= 4.7 && < 5
+                     , protolude
+                     , optparse-applicative
+                     , microlens-platform
+                     , bytestring
+                     , array
+                     , string-conv
+                     , recursion-schemes
+                     , ezmips
+
+library
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  exposed-modules:     Lexer.Token
                      , Parser.Grammar
+                     , Parser.AST
   build-depends:       base >= 4.7 && < 5
                      , protolude
                      , text
@@ -30,5 +44,6 @@ executable ezmips
                      , recursion-schemes
                      , bytestring
                      , string-conv
-                     , free
+                     , free        
+                                                                   
 

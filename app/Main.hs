@@ -8,7 +8,6 @@ import Data.Semigroup ((<>))
 import Options.Applicative
 import Lens.Micro.Platform
 
-
 import qualified Lexer.Token as T
 import qualified Parser.Grammar as G
 

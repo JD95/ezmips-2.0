@@ -1,6 +1,6 @@
 {
 
-module Parser.Grammar (Exp_ (..), parseCalc, Exp) where
+module Parser.Grammar (Exp_ (..), parseExp, Exp) where
   
 import Lexer.Token
 import Data.Functor.Foldable
@@ -16,17 +16,15 @@ import Parser.AST
 %tokentype { Lexeme }
 
 %token
-    let { TokenLet }
-    in  { TokenIn }
-    int { TokenInt $$ }
-    var { TokenSym $$ }
-    '=' { TokenEq }
-    '+' { TokenPlus }
-    '-' { TokenMinus }
-    '*' { TokenTimes }
-    '/' { TokenDiv }
-    '(' { TokenLParen }
-    ')' { TokenRParen }
+int { L _ (TokenInt $$) }
+var { L _ (TokenSym $$) }
+'=' { L _ TokenEq }
+'+' { L _ TokenPlus }
+    '-' { L _ TokenMinus }
+    '*' { L _ TokenTimes }
+    '/' { L _ TokenDiv }
+    '(' { L _ TokenLParen }
+    ')' { L _ TokenRParen }
 
 %right in
 %nonassoc '>' '<'
@@ -45,8 +43,5 @@ Exp : Exp '+' Exp            { Fix (Plus $1 $3) }
     | int                    { Fix (Int $1) }
 
 {
-
-parseError :: [Token] -> a
-parseError _ = error "Parse error"
-  
+  parseExp str = runAlex str parseGrammar
 }
