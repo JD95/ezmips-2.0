@@ -28,5 +28,7 @@ executable ezmips
                      , microlens-platform
                      , array
                      , recursion-schemes
+                     , bytestring
+                     , string-conv
                      , free
 

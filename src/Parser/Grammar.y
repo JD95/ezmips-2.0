@@ -10,8 +10,10 @@ import Parser.AST
 }
 
 %name parseCalc
-%tokentype { Token }
+%lexer {lexwrap} {EOF}
+%monad {Alex}
 %error { parseError }
+%tokentype { Lexeme }
 
 %token
     let { TokenLet }
