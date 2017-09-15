@@ -17,6 +17,7 @@ tokens :-
   
   $digit+ { usingInput TokenInt }
   if                            { ignoreInput TokenIf }
+  while                         { ignoreInput TokenWhile }
   else                          { ignoreInput TokenElse }
   \=                            { ignoreInput TokenEq }
   \+                            { ignoreInput TokenPlus }
@@ -51,6 +52,7 @@ data Lexeme = L AlexPosn Token | EOF deriving (Show)
 
 -- The token type:
 data Token = TokenIf
+           | TokenWhile
      	   | TokenElse
            | TokenIn
            | TokenInt Int

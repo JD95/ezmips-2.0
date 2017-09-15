@@ -29,6 +29,7 @@ var { L _ (TokenSym $$) }
 ';' { L _ TokenSemiColon }
 if  { L _ TokenIf }
 else { L _ TokenElse }
+while { L _ TokenWhile }
 
 %right in
 %nonassoc '>' '<'
@@ -40,6 +41,7 @@ else { L _ TokenElse }
 
 Exp : if '(' Exp ')' '{' Exp '}' { Fix (If $3 $6 Nothing) }
     | if '(' Exp ')' '{' Exp '}' else '{' Exp '}' { Fix (If $3 $6 (Just $10)) }
+    | while '(' Exp ')' '{' Exp '}' { Fix (While $3 $6) }
     | Exp '+' Exp            { Fix (Plus $1 $3) }
     | Exp '-' Exp            { Fix (Minus $1 $3) }
     | Exp '*' Exp            { Fix (Times $1 $3) }
