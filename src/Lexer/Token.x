@@ -16,7 +16,8 @@ tokens :-
   "--".* ;
   
   $digit+ { usingInput TokenInt }
-  
+  if                            { ignoreInput TokenIf }
+  else                          { ignoreInput TokenElse }
   \=                            { ignoreInput TokenEq }
   \+                            { ignoreInput TokenPlus }
   \-                            { ignoreInput TokenMinus }
@@ -24,6 +25,8 @@ tokens :-
   \/                            { ignoreInput TokenDiv }
   \(                            { ignoreInput TokenLParen }
   \)                            { ignoreInput TokenRParen }
+  \{                            { ignoreInput TokenLCurly }
+  \}                            { ignoreInput TokenRCurly }
   $alpha [$alpha $digit \_ \']* { usingInput' TokenSym }
   \;	 	 	   	{ ignoreInput TokenSemiColon }
 {
@@ -47,7 +50,8 @@ scanner str = runAlex
 data Lexeme = L AlexPosn Token | EOF deriving (Show)
 
 -- The token type:
-data Token = TokenLet
+data Token = TokenIf
+     	   | TokenElse
            | TokenIn
            | TokenInt Int
            | TokenSym ByteString.ByteString
@@ -58,6 +62,8 @@ data Token = TokenLet
            | TokenDiv
            | TokenLParen
            | TokenRParen
+	   | TokenLCurly
+	   | TokenRCurly
 	   | TokenSemiColon
            deriving (Eq,Show)
 

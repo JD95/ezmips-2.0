@@ -5,6 +5,7 @@ import           Data.Functor.Foldable
 import           Prelude                ()
 import           Protolude
 
+import Parser.Grammar
 import           Parser.AST
 
 data IType

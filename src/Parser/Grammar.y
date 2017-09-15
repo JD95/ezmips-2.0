@@ -18,14 +18,17 @@ import Parser.AST
 %token
 int { L _ (TokenInt $$) }
 var { L _ (TokenSym $$) }
-'=' { L _ TokenEq }
 '+' { L _ TokenPlus }
 '-' { L _ TokenMinus }
 '*' { L _ TokenTimes }
 '/' { L _ TokenDiv }
 '(' { L _ TokenLParen }
 ')' { L _ TokenRParen }
+'{' { L _ TokenLCurly }
+'}' { L _ TokenRCurly }
 ';' { L _ TokenSemiColon }
+if  { L _ TokenIf }
+else { L _ TokenElse }
 
 %right in
 %nonassoc '>' '<'
@@ -35,7 +38,9 @@ var { L _ (TokenSym $$) }
 
 %%
 
-Exp : Exp '+' Exp            { Fix (Plus $1 $3) }
+Exp : if '(' Exp ')' '{' Exp '}' { Fix (If $3 $6 Nothing) }
+    | if '(' Exp ')' '{' Exp '}' else '{' Exp '}' { Fix (If $3 $6 (Just $10)) }
+    | Exp '+' Exp            { Fix (Plus $1 $3) }
     | Exp '-' Exp            { Fix (Minus $1 $3) }
     | Exp '*' Exp            { Fix (Times $1 $3) }
     | Exp '/' Exp            { Fix (Div $1 $3) }

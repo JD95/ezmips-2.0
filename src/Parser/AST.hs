@@ -12,6 +12,7 @@ import           Protolude
 
 data Exp_ a
   = Stmt a (Maybe a)
+  | If a a (Maybe a)
   | Plus a a
   | Minus a a
   | Times a a
@@ -35,6 +36,10 @@ showExp = cata f
         f (Negate e)  = "-" <> e
         f (Stmt e Nothing) = e <> ";"
         f (Stmt e (Just n)) = e <> ";\n" <> n
+        f (If c a (Just e)) = "if(" <> c <> ") {\n"
+                           <> "\t" <> a
+                           <> "}\n else {\n" <> e <> "}\n"
+        f (If c a Nothing) = "if(" <> c <> ") {\n" <> a <> "\n}\n"
 
 instance Prelude.Show PrintExp where
   show (PrintExp e) = toS $ showExp e
