@@ -19,7 +19,13 @@ tokens :-
   if                            { ignoreInput TokenIf }
   while                         { ignoreInput TokenWhile }
   else                          { ignoreInput TokenElse }
-  \=                            { ignoreInput TokenEq }
+  \=                            { ignoreInput TokenAssign }
+  \=\=                          { ignoreInput TokenEq }
+  \&\&                          { ignoreInput TokenAnd }
+  \|\|                          { ignoreInput TokenOr }
+  \<                            { ignoreInput TokenLT }
+  \>                            { ignoreInput TokenGT }
+  \!                            { ignoreInput TokenNot }
   \+                            { ignoreInput TokenPlus }
   \-                            { ignoreInput TokenMinus }
   \*                            { ignoreInput TokenTimes }
@@ -57,11 +63,17 @@ data Token = TokenIf
            | TokenIn
            | TokenInt Int
            | TokenSym ByteString.ByteString
-           | TokenEq
+           | TokenAssign
            | TokenPlus
            | TokenMinus
            | TokenTimes
            | TokenDiv
+	   | TokenAnd
+	   | TokenOr
+	   | TokenLT
+	   | TokenGT
+	   | TokenEq
+	   | TokenNot
            | TokenLParen
            | TokenRParen
 	   | TokenLCurly

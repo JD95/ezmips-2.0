@@ -2,6 +2,7 @@
 
 module Parser.Grammar (Exp_ (..), parseExp, Exp) where
   
+import Prelude hiding (GT, LT, EQ)
 import Lexer.Token
 import Data.Functor.Foldable
 import Parser.AST    
@@ -27,7 +28,13 @@ sym { L _ (TokenSym $$) }
 '{' { L _ TokenLCurly }
 '}' { L _ TokenRCurly }
 ';' { L _ TokenSemiColon }
-'=' { L _ TokenEq }
+'=' { L _ TokenAssign }
+"==" { L _ TokenEq }
+'<' { L _ TokenLT }
+'>' { L _ TokenGT }
+'!' { L _ TokenNot }
+"&&" { L _ TokenAnd }
+"||" { L _ TokenOr }
 if  { L _ TokenIf }
 else { L _ TokenElse }
 while { L _ TokenWhile }
@@ -44,6 +51,12 @@ Exp : if '(' Exp ')' '{' Exp '}' { Fix (If $3 $6 Nothing) }
     | if '(' Exp ')' '{' Exp '}' else '{' Exp '}' { Fix (If $3 $6 (Just $10)) }
     | while '(' Exp ')' '{' Exp '}' { Fix (While $3 $6) }
     | Exp '=' Exp            { Fix (Assign $1 $3) }
+    | Exp "==" Exp           { Fix (EQ $1 $3) }
+    | Exp "&&" Exp           { Fix (And $1 $3) }
+    | Exp "||" Exp           { Fix (Or $1 $3) }
+    | Exp '<' Exp            { Fix (LT $1 $3) }
+    | Exp '>' Exp            { Fix (GT $1 $3) }
+    | '!' Exp                { Fix (Not $2) }
     | Exp '+' Exp            { Fix (Plus $1 $3) }
     | Exp '-' Exp            { Fix (Minus $1 $3) }
     | Exp '*' Exp            { Fix (Times $1 $3) }

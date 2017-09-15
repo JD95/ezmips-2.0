@@ -8,7 +8,7 @@ import           Control.Monad.Free
 import qualified Control.Monad.Trans.Free as F
 import           Data.Functor.Foldable
 import qualified Prelude
-import           Protolude
+import           Protolude hiding (GT, LT, EQ)
 import qualified Data.ByteString.Lazy as LBS
 
 data Exp_ a
@@ -21,6 +21,12 @@ data Exp_ a
   | Minus a a
   | Times a a
   | Div a a
+  | And a a
+  | Or a a
+  | LT a a
+  | EQ a a
+  | GT a a
+  | Not a
   | Negate a
   | Sym LBS.ByteString
   | Int Int
@@ -39,6 +45,12 @@ showExp = cata f
         f (Minus l r) = l <> " - " <> r
         f (Times l r) = l <> " * " <> r
         f (Div l r)   = l <> " / " <> r
+        f (And l r)  = l <> " && " <> r
+        f (Or l r) = l <> " || " <> r
+        f (LT l r) = l <> " < " <> r
+        f (EQ l r)   = l <> " == " <> r
+        f (GT l r) = l <> " > " <> r
+        f (Not e)  = "!" <> e
         f (Negate e)  = "-" <> e
         f (Stmt e Nothing) = e <> ";"
         f (Stmt e (Just n)) = e <> ";\n" <> n
