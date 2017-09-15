@@ -9,16 +9,20 @@ import qualified Control.Monad.Trans.Free as F
 import           Data.Functor.Foldable
 import qualified Prelude
 import           Protolude
+import qualified Data.ByteString.Lazy as LBS
 
 data Exp_ a
   = Stmt a (Maybe a)
   | If a a (Maybe a)
   | While a a
+  | Decl a a
+  | Assign a a
   | Plus a a
   | Minus a a
   | Times a a
   | Div a a
   | Negate a
+  | Sym LBS.ByteString
   | Int Int
     deriving (Show, Functor, Foldable, Traversable)
 
@@ -30,6 +34,7 @@ showExp :: Exp -> Text
 showExp = cata f
   where f :: Exp_ Text -> Text        
         f (Int i)     = show i
+        f (Sym s)     = show s
         f (Plus l r)  = l <> " + " <> r
         f (Minus l r) = l <> " - " <> r
         f (Times l r) = l <> " * " <> r
@@ -42,6 +47,8 @@ showExp = cata f
                            <> "}\n else {\n" <> e <> "}\n"
         f (If c a Nothing) = "if(" <> c <> ") {\n" <> a <> "\n}\n"
         f (While c a) = "while(" <> c <> ") {\n" <> a <> "\n}\n"
+        f (Decl t a) = t <> " " <> a
+        f (Assign v e) = v <> " = " <> e
 
 instance Prelude.Show PrintExp where
   show (PrintExp e) = toS $ showExp e
@@ -52,6 +59,7 @@ pattern Times_ l r = Fix (Times l r)
 pattern Div_ l r = Fix (Div l r)
 pattern Negate_ e  = Fix (Negate e)
 pattern Int_ n = Fix (Int n)
+pattern Sym_ s = Fix (Sym s)
 
 type FExp = Free Exp_ Void
 
