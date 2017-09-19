@@ -22,7 +22,7 @@ data Exp_ a
   | Decl a a
   | Assign a a
   | FCall LBS.ByteString [a]
-  | FDef VType Name [(Name, VType)] [a] 
+  | FDef VType Name [a] [a] 
   | Plus a a
   | Minus a a
   | Times a a
@@ -69,6 +69,9 @@ showExp = cata f
         f (While c a) = "while(" <> c <> ") {\n" <> showInnerBlock a <> "\n}\n"
         f (Decl t a) = t <> " " <> a
         f (Assign v e) = v <> " = " <> e
+        f (FCall s xs) = toS s <> "(" <> showInnerBlock xs <> ")"
+        f (FDef t s is xs) = toS t <> " " <> toS s <> "(" <> show is <> ")"
+                          <> "{" <> showInnerBlock xs <> "}"
 
 instance Prelude.Show PrintExp where
   show (PrintExp e) = toS $ showExp e

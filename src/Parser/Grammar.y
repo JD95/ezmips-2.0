@@ -28,6 +28,7 @@ sym { L _ (TokenSym $$) }
 '{' { L _ TokenLCurly }
 '}' { L _ TokenRCurly }
 ';' { L _ TokenSemiColon }
+',' { L _ TokenComma }
 '=' { L _ TokenAssign }
 "==" { L _ TokenEq }
 '<' { L _ TokenLT }
@@ -55,7 +56,12 @@ Stmts : Stmts S         { $2 : $1 }
 S : if '(' Exp ')' '{' Stmts '}' else S { Fix (If $3 $6 (Just $9)) }
   | if '(' Exp ')' '{' Stmts '}'          { Fix (If $3 $6 Nothing) }
   | while '(' Exp ')' '{' Stmts '}'       { Fix (While $3 $6) }
+  | sym sym '(' Cms ')' '{' Stmts '}'   { Fix (FDef $1 $2 $4 $7) } 
   | Exp ';'                             { Fix (Stmt $1) }
+
+Cms : Cms ',' Exp    { $3 : $1 }
+    | Exp            { [$1] }
+    | {- empty -}    { [] }
 
 Exp : Exp '=' Exp            { Fix (Assign $1 $3) }
     | Exp "==" Exp           { Fix (EQ $1 $3) }
@@ -70,6 +76,7 @@ Exp : Exp '=' Exp            { Fix (Assign $1 $3) }
     | Exp '/' Exp            { Fix (Div $1 $3) }
     | '(' Exp ')'            { $2 }
     | '-' Exp %prec NEG      { Fix (Negate $2) }
+    | sym '(' Cms ')'        { Fix (FCall $1 $3) }
     | int                    { Fix (Int $1) }
     | sym sym                { Fix (Decl (Sym_ $1) (Sym_ $2)) }
     | sym                    { Fix (Sym $1) }

@@ -36,6 +36,7 @@ tokens :-
   \}                            { ignoreInput TokenRCurly }
   $alpha [$alpha $digit \_ \']* { usingInput' TokenSym }
   \;	 	 	   	{ ignoreInput TokenSemiColon }
+  \,                            { ignoreInput TokenComma }
 {
 
 usingInput f (p,_,s,_) l = do
@@ -79,6 +80,7 @@ data Token = TokenIf
 	   | TokenLCurly
 	   | TokenRCurly
 	   | TokenSemiColon
+	   | TokenComma
            deriving (Eq,Show)
 
 }
