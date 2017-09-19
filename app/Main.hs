@@ -13,7 +13,7 @@ import qualified Parser.Grammar as G
 import qualified Parser.AST as A
 
 debugPrint :: Text -> IO ()
-debugPrint = mapM_ print . fmap A.PrintExp . G.parseExp . toS
+debugPrint = mapM_ print . (fmap . fmap) A.PrintExp . G.parseExp . toS
 
 data Options = Options { message :: Text }
 

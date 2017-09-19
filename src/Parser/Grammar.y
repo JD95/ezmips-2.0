@@ -47,10 +47,17 @@ while { L _ TokenWhile }
 
 %%
 
-Exp : if '(' Exp ')' '{' Exp '}' { Fix (If $3 $6 Nothing) }
-    | if '(' Exp ')' '{' Exp '}' else '{' Exp '}' { Fix (If $3 $6 (Just $10)) }
-    | while '(' Exp ')' '{' Exp '}' { Fix (While $3 $6) }
-    | Exp '=' Exp            { Fix (Assign $1 $3) }
+Stmts : Stmts S         { $2 : $1 }
+      | Stmts ';'           { $1 }
+      | S                   { [$1] }
+      | {- empty -}         { [] }
+
+S : if '(' Exp ')' '{' Stmts '}' else S { Fix (If $3 $6 (Just $9)) }
+  | if '(' Exp ')' '{' Stmts '}'          { Fix (If $3 $6 Nothing) }
+  | while '(' Exp ')' '{' Stmts '}'       { Fix (While $3 $6) }
+  | Exp ';'                             { Fix (Stmt $1) }
+
+Exp : Exp '=' Exp            { Fix (Assign $1 $3) }
     | Exp "==" Exp           { Fix (EQ $1 $3) }
     | Exp "&&" Exp           { Fix (And $1 $3) }
     | Exp "||" Exp           { Fix (Or $1 $3) }
@@ -61,8 +68,6 @@ Exp : if '(' Exp ')' '{' Exp '}' { Fix (If $3 $6 Nothing) }
     | Exp '-' Exp            { Fix (Minus $1 $3) }
     | Exp '*' Exp            { Fix (Times $1 $3) }
     | Exp '/' Exp            { Fix (Div $1 $3) }
-    | Exp ';'                { Fix (Stmt $1 Nothing) }
-    | Exp ';' Exp            { Fix (Stmt $1 (Just $3)) }
     | '(' Exp ')'            { $2 }
     | '-' Exp %prec NEG      { Fix (Negate $2) }
     | int                    { Fix (Int $1) }

@@ -10,13 +10,19 @@ import           Data.Functor.Foldable
 import qualified Prelude
 import           Protolude hiding (GT, LT, EQ)
 import qualified Data.ByteString.Lazy as LBS
+import qualified Data.Text as T
+
+type Name = LBS.ByteString
+type VType = LBS.ByteString
 
 data Exp_ a
-  = Stmt a (Maybe a)
-  | If a a (Maybe a)
-  | While a a
+  = Stmt a 
+  | If a [a] (Maybe a)
+  | While a [a] 
   | Decl a a
   | Assign a a
+  | FCall LBS.ByteString [a]
+  | FDef VType Name [(Name, VType)] [a] 
   | Plus a a
   | Minus a a
   | Times a a
@@ -36,6 +42,9 @@ type Exp = Fix Exp_
 
 newtype PrintExp = PrintExp Exp
 
+showInnerBlock :: [Text] -> Text
+showInnerBlock = toS . T.concat . fmap ("  " <>)
+
 showExp :: Exp -> Text
 showExp = cata f
   where f :: Exp_ Text -> Text        
@@ -52,13 +61,12 @@ showExp = cata f
         f (GT l r) = l <> " > " <> r
         f (Not e)  = "!" <> e
         f (Negate e)  = "-" <> e
-        f (Stmt e Nothing) = e <> ";"
-        f (Stmt e (Just n)) = e <> ";\n" <> n
+        f (Stmt e) = e <> ";"
         f (If c a (Just e)) = "if(" <> c <> ") {\n"
-                           <> "\t" <> a
+                           <> "\t" <> showInnerBlock a
                            <> "}\n else {\n" <> e <> "}\n"
-        f (If c a Nothing) = "if(" <> c <> ") {\n" <> a <> "\n}\n"
-        f (While c a) = "while(" <> c <> ") {\n" <> a <> "\n}\n"
+        f (If c a Nothing) = "if(" <> c <> ") {\n" <> showInnerBlock a <> "\n}\n"
+        f (While c a) = "while(" <> c <> ") {\n" <> showInnerBlock a <> "\n}\n"
         f (Decl t a) = t <> " " <> a
         f (Assign v e) = v <> " = " <> e
 
