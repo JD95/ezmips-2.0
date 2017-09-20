@@ -11,6 +11,7 @@ import           Parser.AST
 data IType
   = IInt
   | IVoid
+  | IFunc IType [IType]
     deriving (Show, Eq)
 
 data IError
