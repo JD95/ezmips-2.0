@@ -34,7 +34,7 @@ data Exp_ a
   | GT a a
   | Not a
   | Negate a
-  | Sym LBS.ByteString
+  | Sym Name 
   | Int Int
     deriving (Show, Functor, Foldable, Traversable)
 
@@ -90,6 +90,9 @@ newtype PrintFExp = PrintFExp FExp
 
 instance Prelude.Show PrintFExp  where
   show (PrintFExp e) = show . PrintExp . freeToFix $ e
+
+sym :: Name -> FExp
+sym s = Free (Sym s)
 
 plus :: FExp -> FExp -> FExp
 plus l r = Free (Plus l r)
