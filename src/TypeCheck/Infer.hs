@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 module TypeCheck.Infer where
 
@@ -42,10 +43,20 @@ infer = cata f
           t <- Map.lookup s <$> ask 
           let t' = maybe (Left . UndefinedSymbol $ s) Right t
           pure (t' :< Sym s)
-        f (Plus l r) = do
-          x@(lType :< lExp) <- l
-          y@(rType :< rExp) <- r
-          pure ((lType <*$> rType) binaryMathOp :< Plus x y)
+        f (Plus l r) = binaryCheck l r binaryMathOp Plus
+        f (Minus l r) = binaryCheck l r binaryMathOp Minus
+        f (Times l r) = binaryCheck l r binaryMathOp Times
+        f (Div l r) = binaryCheck l r binaryMathOp Div
+
+binaryCheck :: TypeInference
+            -> TypeInference
+            -> (IType -> IType -> IResult)
+            -> (forall a. a -> a -> Exp_ a)
+            -> TypeInference
+binaryCheck l r f h = do
+  x@(lType :< lExp) <- l
+  y@(rType :< rExp) <- r
+  pure ((lType <*$> rType) f :< h x y)
 
 (<*$>) :: Semigroup m => Either m a -> Either m a -> (a -> a -> Either m a) -> Either m a 
 (Left a) <*$> (Left b) = const $ Left (a <> b)
