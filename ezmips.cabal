@@ -28,6 +28,8 @@ executable ezmips
                      , string-conv
                      , recursion-schemes
                      , ezmips
+                     , containers
+                     , mtl
 
 library
   hs-source-dirs:      src
@@ -44,6 +46,8 @@ library
                      , recursion-schemes
                      , bytestring
                      , string-conv
-                     , free        
+                     , free
+                     , containers
+                     , mtl        
                                                                    
 
