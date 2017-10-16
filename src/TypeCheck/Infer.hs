@@ -16,14 +16,14 @@ import Parser.AST
 data IType
   = IInt
   | IVoid
-    deriving (Show, Eq)
+  | ISym Name
+  | IDecl (TypeInference -> TypeInference) 
 
 data IError
   = WrongType IType IType
   | InvalidFuncArgs [IType] [IType]
   | UndefinedSymbol Name
   | Errors [IError]
-    deriving (Show)
 
 instance Semigroup IError where
   (Errors xs) <> (Errors ys) = Errors (xs <> ys)
@@ -47,6 +47,7 @@ infer = cata f
         f (Minus l r) = binaryCheck l r binaryMathOp Minus
         f (Times l r) = binaryCheck l r binaryMathOp Times
         f (Div l r) = binaryCheck l r binaryMathOp Div
+        f (Decl t n) = binaryCheck t n undefined Decl 
 
 binaryCheck :: TypeInference
             -> TypeInference
@@ -65,6 +66,10 @@ x <*$> y = \f -> join $ f <$> x <*> y
 binaryMathOp :: IType -> IType -> IResult 
 binaryMathOp IInt IInt = Right IInt
 binaryMathOp a b = Left (InvalidFuncArgs [IInt, IInt] [a, b])
+
+declCheck :: IType -> IType -> IResult
+declCheck (ISym t) (ISym n) = undefined
+declCheck _ _ = Left undefined
 
 test = flip runReader table . infer . freeToFix $ do
   plus (sym "x") (sym "y")
