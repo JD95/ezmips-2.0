@@ -8,7 +8,7 @@ import           Control.Monad.Free
 import qualified Control.Monad.Trans.Free as F
 import           Data.Functor.Foldable
 import qualified Prelude
-import           Protolude hiding (GT, LT, EQ)
+import           Protolude hiding (GT, LT, EQ, sym)
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Text as T
 
@@ -111,6 +111,9 @@ neg e = Free (Negate e)
 
 int :: Int -> FExp
 int e = Free (Int e)
+
+decl :: Name -> Name -> FExp
+decl t n = Free (Decl (sym t) (sym n))
 
 freeToFix :: (Functor f) => Free f Void -> Fix f
 freeToFix = cata f

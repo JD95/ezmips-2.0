@@ -9,25 +9,39 @@ import Control.Comonad.Cofree
 import Data.Functor.Foldable
 import qualified Data.Map as Map
 import Control.Monad.Reader
-import Prelude ()
+import qualified Prelude 
 import Protolude hiding (sym)
 
 import Parser.Grammar
 import Parser.AST
 
+newtype VarDecl = VarDecl (TypeInference -> TypeInference)
+
+instance Prelude.Show VarDecl where
+  show _ = "..."
+
+instance Prelude.Eq VarDecl where
+  _  == _ = True 
+
 data IType
   = IInt
   | IVoid
   | ISym Name
-  | IDecl (TypeInference -> TypeInference) 
+  | IDecl IType VarDecl  
   | IBool
+  | ITypeTag IType
   | IFunc IType [IType]
+    deriving (Prelude.Show, Prelude.Eq)
 
 data IError
   = WrongType IType IType
   | InvalidFuncArgs [IType] [IType]
   | UndefinedSymbol Name
+  | RedeclaredVar Name
+  | InvalidType Name
+  | BadVariableDecl
   | Errors [IError]
+    deriving (Prelude.Show)
 
 instance Semigroup IError where
   (Errors xs) <> (Errors ys) = Errors (xs <> ys)
@@ -60,20 +74,6 @@ infer = cata f
           t <- Map.lookup s <$> ask 
           let t' = maybe (ILeft . UndefinedSymbol $ s) IRight t
           pure (t' :< Sym s)
-<<<<<<< HEAD
-        f (Plus l r) = binaryCheck l r binaryMathOp Plus
-        f (Minus l r) = binaryCheck l r binaryMathOp Minus
-        f (Times l r) = binaryCheck l r binaryMathOp Times
-        f (Div l r) = binaryCheck l r binaryMathOp Div
-        f (Decl t n) = binaryCheck t n undefined Decl 
-
-binaryCheck :: TypeInference
-            -> TypeInference
-            -> (IType -> IType -> IResult)
-            -> (forall a. a -> a -> Exp_ a)
-            -> TypeInference
-binaryCheck l r f h = do
-=======
 
         -- Math Operations
         f (Plus l r) = binaryFunc l r mathOp Plus
@@ -85,7 +85,9 @@ binaryCheck l r f h = do
         f (Div l r) = binaryFunc l r logicOp Div
         f (And l r) = binaryFunc l r logicOp And 
         f (Or l r) = binaryFunc l r logicOp Or 
-        f (Not e) = unaryFunc e (unaryCheck IBool IBool) Not 
+        f (Not e) = unaryFunc e (unaryCheck IBool IBool) Not
+
+        f (Decl t n) = binaryFunc t n declCheck Decl  
 
 unaryFunc :: TypeInference
           -> (IResult -> IResult)
@@ -98,12 +100,11 @@ unaryFunc e f h = do
 unaryCheck e pass = \x -> matchFuncArgs [e] [x] pass
 
 binaryFunc :: TypeInference
-                -> TypeInference
-                -> (IResult -> IResult -> IResult)
-                -> (forall a. a -> a -> Exp_ a)
-                -> TypeInference
+           -> TypeInference
+           -> (IResult -> IResult -> IResult)
+           -> (forall a. a -> a -> Exp_ a)
+           -> TypeInference
 binaryFunc l r f h = do
->>>>>>> 9a0a6107a6e3a2d3e55677f922872059aa225480
   x@(lType :< lExp) <- l
   y@(rType :< rExp) <- r
   pure ((f lType rType) :< h x y)
@@ -112,12 +113,14 @@ binaryCheck l r pass = \x y -> matchFuncArgs [l, r] [x, y] pass
 mathOp = binaryCheck IInt IInt IInt
 logicOp = binaryCheck IBool IBool IBool
 
-<<<<<<< HEAD
-declCheck :: IType -> IType -> IResult
-declCheck (ISym t) (ISym n) = undefined
-declCheck _ _ = Left undefined
+declCheck :: IResult -> IResult -> IResult
+declCheck (IRight (ITypeTag t)) (ILeft (UndefinedSymbol n)) =
+  IRight . IDecl t . VarDecl $ \next ->
+    runReader next . Map.insert n t <$> ask 
+declCheck _ (IRight (ISym n)) = ILeft (RedeclaredVar n)
+declCheck (IRight (ISym t)) _ = ILeft (InvalidType t) 
+declCheck _ _ = ILeft BadVariableDecl 
 
-=======
 matchFuncArgs :: [IType]    -- ^ Expected Inputs
               -> [IResult]  -- ^ Given Inputs
               -> IType      -- ^ Success Type
@@ -128,10 +131,10 @@ matchFuncArgs es gs r = do
     then pure r
     else ILeft $ InvalidFuncArgs es givens
     
->>>>>>> 9a0a6107a6e3a2d3e55677f922872059aa225480
 test = flip runReader table . infer . freeToFix $ do
-  plus (sym "x") (sym "y")
+  decl "int" "x"
   where table = Map.fromList 
-          [ ("x", IVoid)
-          , ("y", IInt)
+          [ ("y", IInt)
+          , ("int", ITypeTag IInt)
+          , ("bool", ITypeTag IBool)
           ]
