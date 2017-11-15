@@ -10,7 +10,7 @@ import Data.Functor.Foldable
 import qualified Data.Map as Map
 import Control.Monad.Reader
 import qualified Prelude 
-import Protolude hiding (sym)
+import Protolude hiding (sym, LT, GT, EQ)
 
 import Parser.Grammar
 import Parser.AST
@@ -87,6 +87,10 @@ infer = cata f
         f (Or l r) = binaryFunc l r logicOp Or 
         f (Not e) = unaryFunc e (unaryCheck IBool IBool) Not
 
+        f (LT l r) = binaryFunc l r intComp LT
+        f (EQ l r) = binaryFunc l r intComp EQ
+        f (GT l r) = binaryFunc l r intComp GT
+
         f (Decl t n) = binaryFunc t n declCheck Decl  
 
 unaryFunc :: TypeInference
@@ -112,6 +116,7 @@ binaryFunc l r f h = do
 binaryCheck l r pass = \x y -> matchFuncArgs [l, r] [x, y] pass
 mathOp = binaryCheck IInt IInt IInt
 logicOp = binaryCheck IBool IBool IBool
+intComp = binaryCheck IInt IInt IBool
 
 declCheck :: IResult -> IResult -> IResult
 declCheck (IRight (ITypeTag t)) (ILeft (UndefinedSymbol n)) =
