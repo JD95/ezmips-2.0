@@ -1,19 +1,19 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes        #-}
 
 module TypeCheck.Infer where
 
-import Control.Comonad.Cofree
-import Data.Functor.Foldable
-import qualified Data.Map as Map
-import Control.Monad.Reader
-import qualified Prelude 
-import Protolude hiding (sym)
+import           Control.Comonad.Cofree
+import           Control.Monad.Reader
+import           Data.Functor.Foldable
+import qualified Data.Map               as Map
+import qualified Prelude
+import           Protolude              hiding (sym)
 
-import Parser.Grammar
-import Parser.AST
+import           Parser.AST
+import           Parser.Grammar
 
 newtype VarDecl = VarDecl (TypeInference -> TypeInference)
 
@@ -21,13 +21,13 @@ instance Prelude.Show VarDecl where
   show _ = "..."
 
 instance Prelude.Eq VarDecl where
-  _  == _ = True 
+  _  == _ = True
 
 data IType
   = IInt
   | IVoid
   | ISym Name
-  | IDecl IType VarDecl  
+  | IDecl IType VarDecl
   | IBool
   | ITypeTag IType
   | IFunc IType [IType]
@@ -40,6 +40,7 @@ data IError
   | RedeclaredVar Name
   | InvalidType Name
   | BadVariableDecl
+  | InvalidAssign IType IType
   | Errors [IError]
     deriving (Prelude.Show)
 
@@ -61,17 +62,17 @@ instance Semigroup e => Applicative (IEither e) where
 instance Semigroup e => Monad (IEither e) where
   (ILeft e) >>= f = ILeft e
   (IRight e) >>= f = f e
-  
+
 type IResult = IEither IError IType
 type TypedTree = Cofree Exp_ IResult
-type TypeInference = Reader (Map.Map Name IType) TypedTree 
+type TypeInference = Reader (Map.Map Name IType) TypedTree
 
 infer :: Exp -> TypeInference
 infer = cata f
   where f :: Exp_ TypeInference -> TypeInference
         f (Int x) = pure (IRight IInt :< Int x)
         f (Sym s) = do
-          t <- Map.lookup s <$> ask 
+          t <- Map.lookup s <$> ask
           let t' = maybe (ILeft . UndefinedSymbol $ s) IRight t
           pure (t' :< Sym s)
 
@@ -83,11 +84,12 @@ infer = cata f
 
         -- Logic Operations
         f (Div l r) = binaryFunc l r logicOp Div
-        f (And l r) = binaryFunc l r logicOp And 
-        f (Or l r) = binaryFunc l r logicOp Or 
+        f (And l r) = binaryFunc l r logicOp And
+        f (Or l r) = binaryFunc l r logicOp Or
         f (Not e) = unaryFunc e (unaryCheck IBool IBool) Not
 
-        f (Decl t n) = binaryFunc t n declCheck Decl  
+        f (Decl t n) = binaryFunc t n declCheck Decl
+        f (Assign x val) = assignCheck x val Assign
 
 unaryFunc :: TypeInference
           -> (IResult -> IResult)
@@ -116,10 +118,21 @@ logicOp = binaryCheck IBool IBool IBool
 declCheck :: IResult -> IResult -> IResult
 declCheck (IRight (ITypeTag t)) (ILeft (UndefinedSymbol n)) =
   IRight . IDecl t . VarDecl $ \next ->
-    runReader next . Map.insert n t <$> ask 
+    runReader next . Map.insert n t <$> ask
 declCheck _ (IRight (ISym n)) = ILeft (RedeclaredVar n)
-declCheck (IRight (ISym t)) _ = ILeft (InvalidType t) 
-declCheck _ _ = ILeft BadVariableDecl 
+declCheck (IRight (ISym t)) _ = ILeft (InvalidType t)
+declCheck _ _ = ILeft BadVariableDecl
+
+assignCheck :: TypeInference -> TypeInference -> (forall a. a ->  a -> Exp_ a) -> TypeInference
+assignCheck var val h = do
+  l@(lType :< lExp) <- var
+  r@(rType :< rExp) <- val
+  let check x y =
+        if x == y
+          then IRight IVoid
+          else ILeft $ InvalidAssign x y
+  let result = join $ check <$> lType <*> rType
+  pure (result :< h l r)
 
 matchFuncArgs :: [IType]    -- ^ Expected Inputs
               -> [IResult]  -- ^ Given Inputs
@@ -127,14 +140,15 @@ matchFuncArgs :: [IType]    -- ^ Expected Inputs
               -> IResult
 matchFuncArgs es gs r = do
   givens <- sequence gs
-  if and (zipWith (==) es givens) 
+  if and (zipWith (==) es givens)
     then pure r
     else ILeft $ InvalidFuncArgs es givens
-    
+
 test = flip runReader table . infer . freeToFix $ do
-  decl "int" "x"
-  where table = Map.fromList 
-          [ ("y", IInt)
+  assign "x" (sym "y")
+  where table = Map.fromList
+          [ ("y", IBool)
+          , ("x", IBool)
           , ("int", ITypeTag IInt)
           , ("bool", ITypeTag IBool)
           ]

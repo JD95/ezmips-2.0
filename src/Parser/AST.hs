@@ -6,23 +6,23 @@ module Parser.AST where
 
 import           Control.Monad.Free
 import qualified Control.Monad.Trans.Free as F
+import qualified Data.ByteString.Lazy     as LBS
 import           Data.Functor.Foldable
+import qualified Data.Text                as T
 import qualified Prelude
-import           Protolude hiding (GT, LT, EQ, sym)
-import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Text as T
+import           Protolude                hiding (EQ, GT, LT, sym)
 
 type Name = LBS.ByteString
 type VType = LBS.ByteString
 
 data Exp_ a
-  = Stmt a 
+  = Stmt a
   | If a [a] (Maybe a)
-  | While a [a] 
+  | While a [a]
   | Decl a a
   | Assign a a
   | FCall LBS.ByteString [a]
-  | FDef VType Name [a] [a] 
+  | FDef VType Name [a] [a]
   | Plus a a
   | Minus a a
   | Times a a
@@ -34,7 +34,7 @@ data Exp_ a
   | GT a a
   | Not a
   | Negate a
-  | Sym Name 
+  | Sym Name
   | Int Int
     deriving (Show, Functor, Foldable, Traversable)
 
@@ -47,7 +47,7 @@ showInnerBlock = toS . T.concat . fmap ("  " <>)
 
 showExp :: Exp -> Text
 showExp = cata f
-  where f :: Exp_ Text -> Text        
+  where f :: Exp_ Text -> Text
         f (Int i)     = show i
         f (Sym s)     = show s
         f (Plus l r)  = l <> " + " <> r
@@ -114,6 +114,9 @@ int e = Free (Int e)
 
 decl :: Name -> Name -> FExp
 decl t n = Free (Decl (sym t) (sym n))
+
+assign :: Name ->  FExp -> FExp
+assign l r = Free (Assign (sym l) r)
 
 freeToFix :: (Functor f) => Free f Void -> Fix f
 freeToFix = cata f
