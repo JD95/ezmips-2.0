@@ -41,6 +41,7 @@ data IError
   | InvalidType Name
   | BadVariableDecl
   | InvalidAssign IType IType
+  | MustAssignToLValue
   | Errors [IError]
     deriving (Prelude.Show)
 
@@ -123,15 +124,21 @@ declCheck _ (IRight (ISym n)) = ILeft (RedeclaredVar n)
 declCheck (IRight (ISym t)) _ = ILeft (InvalidType t)
 declCheck _ _ = ILeft BadVariableDecl
 
+isLvalue :: Exp_ a -> Bool
+isLvalue (Sym _) = True
+isLValue (Decl _ _) = True
+isLValue _          = False
+
 assignCheck :: TypeInference -> TypeInference -> (forall a. a ->  a -> Exp_ a) -> TypeInference
 assignCheck var val h = do
   l@(lType :< lExp) <- var
-  r@(rType :< rExp) <- val
-  let check x y =
-        if x == y
-          then IRight IVoid
-          else ILeft $ InvalidAssign x y
-  let result = join $ check <$> lType <*> rType
+  r@(rType :< _) <- val
+  let result = do
+        x <- lType
+        y <- rType
+        unless (x /= y) . ILeft $ InvalidAssign x y
+        unless (isLvalue lExp) . ILeft $ MustAssignToLValue
+        IRight IVoid
   pure (result :< h l r)
 
 matchFuncArgs :: [IType]    -- ^ Expected Inputs
