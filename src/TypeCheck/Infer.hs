@@ -10,7 +10,7 @@ import           Control.Monad.Reader
 import           Data.Functor.Foldable
 import qualified Data.Map               as Map
 import qualified Prelude
-import           Protolude              hiding (sym)
+import           Protolude              hiding (EQ, GT, LT, sym)
 
 import           Parser.AST
 import           Parser.Grammar
@@ -91,6 +91,10 @@ infer = cata f
 
         f (Decl t n) = binaryFunc t n declCheck Decl
         f (Assign x val) = assignCheck x val Assign
+        f (LT l r) = binaryFunc l r intComp LT
+        f (EQ l r) = binaryFunc l r intComp EQ
+        f (GT l r) = binaryFunc l r intComp GT
+
 
 unaryFunc :: TypeInference
           -> (IResult -> IResult)
@@ -115,6 +119,7 @@ binaryFunc l r f h = do
 binaryCheck l r pass = \x y -> matchFuncArgs [l, r] [x, y] pass
 mathOp = binaryCheck IInt IInt IInt
 logicOp = binaryCheck IBool IBool IBool
+intComp = binaryCheck IInt IInt IBool
 
 declCheck :: IResult -> IResult -> IResult
 declCheck (IRight (ITypeTag t)) (ILeft (UndefinedSymbol n)) =
